@@ -1,0 +1,75 @@
+﻿@page "/employee/add"
+@page "/employee/edit/{employeeId:int}"
+@using BlazorServerAppTest.Data
+@inject HttpClient Http
+@inject NavigationManager NavigationManager
+<h1>@Title Employee</h1>
+<hr />
+<EditForm Model="@employee" OnInvalidSubmit="SaveEmployee">
+    <DataAnnotationsValidator/>
+    <div class="mb-3">
+        <label for="Name" class="form-label">Name</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="employee.name" />
+        </div>
+        <ValidationMessage For="@(() => employee.name)" />
+    </div>
+    <div class="mb-3">
+        <label for="Age" class="form-label">Age</label>
+        <div class="col-md-4">
+            <InputNumber class="form-control" @bind-Value="employee.age" />
+        </div>
+        <ValidationMessage For="@(() => employee.age)" />
+    </div>
+    <div class="mb-3">
+        <label for="Email" class="form-label">Email</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="employee.email" />
+        </div>
+        <ValidationMessage For="@(() => employee.email)" />
+    </div>
+    <div class="mb-3">
+        <label for="Gender" class="form-label">Gender</label>
+        <div class="col-md-4">
+            <InputText class="form-control" @bind-Value="employee.gender" />
+        </div>
+        <ValidationMessage For="@(() => employee.gender)" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button class="btn btn-light" @onclick="Cancel">Cancel</button>
+    </div>
+</EditForm>
+
+@code {
+    [Parameter]
+    public int employeeId { get; set; }
+    protected string Title = "Add";
+    protected Employee employee = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (employeeId != 0)
+        {
+            Title = "Edit";
+            employee = await Http.GetFromJsonAsync<Employee>("api/Employee/" + employeeId);
+        }
+    }
+    protected async Task SaveEmployee()
+    {
+        if (employee.employeeID != 0)
+        {
+            await Http.PutAsJsonAsync("api/Employee", employee);
+        }
+        else
+        {
+            await Http.PostAsJsonAsync("api/Employee", employee);
+        }
+        Cancel();
+    }
+    public void Cancel()
+    {
+        NavigationManager.NavigateTo("/employeedetails");
+    }
+
+}

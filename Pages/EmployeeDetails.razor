@@ -1,0 +1,102 @@
+﻿@page "/employeedetails"
+@using BlazorServerAppTest.Data
+@inject HttpClient Http
+<h1>Employee Data</h1>
+<p>Blazor CRUD operation</p>
+<div class="row">
+    <div class="col-md-6">
+        <a href='/employee/add' class="btn btn-primary" role="button">
+            <i class="fas fa-user-plus"></i>
+            Add Employee
+        </a>
+    </div>
+    <div class="input-group col">
+        <input type="text" class="form-control" placeholder="Search user by name"
+               @bind="SearchString" @bind:event="oninput" @onkeyup="FilterEmployee" />
+        @if (SearchString.Length > 0)
+        {
+            <div class="input-group-append">
+                <button class="btn btn-danger" @onclick="ResetSearch">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+    </div>
+</div>
+<br />
+@if (employeeList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <table class="table table-striped align-middle table-bordered">
+        <thead class="table-success">
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Email</th>
+                <th>Gender</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employee in employeeList)
+            {
+                <tr>
+                    <td>@employee.employeeID</td>
+                    <td>@employee.name</td>
+                    <td>@employee.age</td>
+                    <td>@employee.email</td>
+                    <td>@employee.gender</td>
+                    <td>
+                        <a href='/employee/edit/@employee.employeeID' class="btn btn-outline-dark" role="button">
+                            Edit
+                        </a>
+                        <a href='/user/delete/@employee.employeeID' class="btn btn-outline-danger" role="button">
+                            Delete
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+}
+@code {
+    protected List<Employee> employeeList = new();
+    protected List<Employee> searchEmployeeData = new();
+    protected Employee employee = new();
+    protected string SearchString { get; set; } = string.Empty;
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUser();
+    }
+    protected async Task GetUser()
+    {
+        employeeList = await Http.GetFromJsonAsync<List<Employee>>("/api/Employee");
+        searchEmployeeData = employeeList;
+    }
+    protected void FilterEmployee()
+    {
+        if (!string.IsNullOrEmpty(SearchString))
+        {
+            employeeList = searchEmployeeData
+                .Where(x => x.name.IndexOf(SearchString, StringComparison.OrdinalIgnoreCase) != -1)
+                .ToList();
+        }
+        else
+        {
+            employeeList = searchEmployeeData;
+        }
+    }
+    protected void DeleteConfirm(int employeeID)
+    {
+        employee = employeeList.FirstOrDefault(x => x.employeeID == employeeID);
+    }
+    public void ResetSearch()
+    {
+        SearchString = string.Empty;
+        employeeList = searchEmployeeData;
+    }
+}
